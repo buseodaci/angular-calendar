@@ -1,8 +1,19 @@
-import {Component, ChangeDetectionStrategy, ViewChild, TemplateRef,} from '@angular/core';
+import {Component, ChangeDetectionStrategy, ViewChild, TemplateRef, Inject, OnInit, OnDestroy,} from '@angular/core';
 import {startOfDay, endOfDay, subDays, addDays, endOfMonth, isSameDay, isSameMonth, addHours,} from 'date-fns';
 import {Subject} from 'rxjs';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import {CalendarEvent, CalendarEventAction, CalendarEventTimesChangedEvent, CalendarView,} from 'angular-calendar';
+import {
+  CalendarEvent,
+  CalendarEventAction,
+  CalendarEventTimesChangedEvent,
+  CalendarView,
+  CalendarEventTitleFormatter,
+  CalendarDateFormatter,
+} from 'angular-calendar';
+import {DOCUMENT} from '@angular/common';
+import {CustomEventTitleFormatter} from './custom-event-title-formatter.provider';
+import {CustomDateFormatter} from './custom-date-formatter.provider';
+import {FlatpickrDefaultsInterface} from 'angularx-flatpickr/flatpickr-defaults.service';
 
 const colors: any = {
   red: {
@@ -24,7 +35,16 @@ const colors: any = {
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  providers: [
+    {
+      provide: CalendarEventTitleFormatter,
+      useClass: CustomEventTitleFormatter,
+    }, {
+      provide: CalendarDateFormatter,
+      useClass: CustomDateFormatter,
+    }
+  ],
 })
 export class AppComponent {
   @ViewChild('modalContent', {static: true}) modalContent: TemplateRef<any>;
@@ -79,6 +99,11 @@ export class AppComponent {
       title: 'An event with no end date',
       color: colors.yellow,
       actions: this.actions,
+      draggable: true,
+      resizable: {
+        beforeStart: true,
+        afterEnd: true,
+      },
     },
     {
       start: subDays(endOfMonth(new Date()), 3),
@@ -86,6 +111,11 @@ export class AppComponent {
       title: 'A long event that spans 2 months',
       color: colors.blue,
       allDay: true,
+      draggable: true,
+      resizable: {
+        beforeStart: true,
+        afterEnd: true,
+      },
     },
     {
       start: addHours(startOfDay(new Date()), 2),
@@ -102,8 +132,38 @@ export class AppComponent {
   ];
 
   activeDayIsOpen = true;
+  hourSegments = 8;
+  // locale: string = 'tr';
+  dayStartHour = 9;
+  dayEndHour = 17;
+  clickedDate: Date;
+  clickedColumn: number;
+
+  public options: FlatpickrDefaultsInterface = {
+    allowInput: true,
+    enableTime: true,
+    mode: 'single',
+    dateFormat: 'Y-m-d H:i',
+    enable: [{
+      from: new Date(new Date().setDate(new Date().getDate() - 1)), //Current day
+      to: new Date(new Date().getFullYear() + 200, 12) //Two hundred years later
+    }]
+  };
 
   constructor(private modal: NgbModal) {
+  }
+
+  ngOnInit(): void {
+    throw new Error('Method not implemented.');
+    this.disabledDay('2021-06-10');
+  }
+
+
+  disabledDay(date) {
+    console.log('(date.getDay() === 0 || date.getDay() === 6)');
+    console.log((date.getDay() === 0 || date.getDay() === 6));
+    //  return (date.getDay() === 0 || date.getDay() === 6);
+    return true;
   }
 
   dayClicked({date, events}: { date: Date; events: CalendarEvent[] }): void {
@@ -167,5 +227,10 @@ export class AppComponent {
 
   closeOpenMonthViewDay(): void {
     this.activeDayIsOpen = false;
+  }
+
+  changeDay(date: Date) {
+    this.viewDate = date;
+    this.view = CalendarView.Day;
   }
 }

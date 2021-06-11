@@ -1,3 +1,5 @@
+<!--<mwl-demo-utils-calendar-header [(view)]="view" [(viewDate)]="viewDate">
+</mwl-demo-utils-calendar-header>-->
 <div class="row text-center">
   <div class="col-md-4">
     <div class="btn-group">
@@ -31,23 +33,37 @@
   </div>
 </div>
 <br/>
-<div [ngSwitch]="view">
-  <mwl-calendar-month-view *ngSwitchCase="CalendarView.Month" [viewDate]="viewDate" [events]="events"
-                           [refresh]="refresh" [activeDayIsOpen]="activeDayIsOpen" (dayClicked)="dayClicked($event.day)"
-                           (eventClicked)="handleEvent('Clicked', $event.event)"
-                           (eventTimesChanged)="eventTimesChanged($event)">
-  </mwl-calendar-month-view>
-  <mwl-calendar-week-view *ngSwitchCase="CalendarView.Week" [viewDate]="viewDate" [events]="events" [refresh]="refresh"
-                          (eventClicked)="handleEvent('Clicked', $event.event)"
-                          (eventTimesChanged)="eventTimesChanged($event)">
-  </mwl-calendar-week-view>
-  <mwl-calendar-day-view *ngSwitchCase="CalendarView.Day" [viewDate]="viewDate" [events]="events" [refresh]="refresh"
-                         (eventClicked)="handleEvent('Clicked', $event.event)"
-                         (eventTimesChanged)="eventTimesChanged($event)">
-  </mwl-calendar-day-view>
+
+
+<div class="alert alert-info">Click on a day or time slot on the view.
+  <strong *ngIf="clickedDate">You clicked on this time: {{clickedDate | date:'medium' }}</strong>
+  <strong *ngIf="clickedColumn != null">You clicked on this column: {{ clickedColumn }}</strong>
 </div>
 
-<!-- Everything you see below is just for the demo, you don't need to include it in your app -->
+<div [ngSwitch]="view">
+  <mwl-calendar-month-view *ngSwitchCase="CalendarView.Month" [viewDate]="viewDate" [events]="events"
+                           [refresh]="refresh" [activeDayIsOpen]="activeDayIsOpen"
+                           (eventClicked)="handleEvent('Clicked', $event.event)"
+                           (dayClicked)="changeDay($event.day.date); clickedDate=$event.day.date"
+                           (eventTimesChanged)="eventTimesChanged($event)"
+                           (columnHeaderClicked)="clickedColumn = $event.isoDayNumber">
+  </mwl-calendar-month-view>
+
+  <mwl-calendar-week-view *ngSwitchCase="CalendarView.Week" [viewDate]="viewDate" [events]="events" [refresh]="refresh"
+                          (eventClicked)="handleEvent('Clicked', $event.event)"
+                          (dayHeaderClicked)="changeDay($event.day.date); clickedDate=$event.day.date"
+                          (eventTimesChanged)="eventTimesChanged($event)" [dayStartHour]="dayStartHour"
+                          [hourSegments]="hourSegments"
+                          [dayEndHour]="dayEndHour" (hourSegmentClicked)="clickedDate = $event.date">
+  </mwl-calendar-week-view>
+
+  <mwl-calendar-day-view *ngSwitchCase="CalendarView.Day" [viewDate]="viewDate" [events]="events" [refresh]="refresh"
+                         (eventClicked)="handleEvent('Clicked', $event.event)"
+                         (eventTimesChanged)="eventTimesChanged($event)" [hourSegments]="hourSegments"
+                         [dayStartHour]="dayStartHour" [dayEndHour]="dayEndHour"
+                         (hourSegmentClicked)="clickedDate = $event.date">
+  </mwl-calendar-day-view>
+</div>
 
 <br/><br/><br/>
 
@@ -84,7 +100,7 @@
       <td>
         <input class="form-control" type="text" mwlFlatpickr [(ngModel)]="event.start" (ngModelChange)="refresh.next()"
                [altInput]="true" [convertModelValue]="true" [enableTime]="true" dateFormat="Y-m-dTH:i"
-               altFormat="F j, Y H:i" placeholder="Not set" minDate="yesterday"/>
+               altFormat="F j, Y H:i" placeholder="Not set"/>
       </td>
       <td>
         <input class="form-control" type="text" mwlFlatpickr [(ngModel)]="event.end" (ngModelChange)="refresh.next()"
